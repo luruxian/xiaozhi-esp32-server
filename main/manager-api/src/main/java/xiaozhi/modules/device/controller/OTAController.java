@@ -25,13 +25,25 @@ import xiaozhi.modules.device.dto.DeviceReportReqDTO;
 import xiaozhi.modules.device.dto.DeviceReportRespDTO;
 import xiaozhi.modules.device.service.DeviceService;
 import xiaozhi.modules.device.utils.NetworkUtil;
+import xiaozhi.modules.sys.service.SysParamsService;
+
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.io.IOException;
+import java.net.URI;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Tag(name = "设备管理", description = "OTA 相关接口")
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/ota/")
 public class OTAController {
     private final DeviceService deviceService;
+    private final SysParamsService SysParamsService;
 
     @Operation(summary = "检查 OTA 版本和设备激活状态")
     @PostMapping
@@ -70,5 +82,38 @@ public class OTAController {
                 .contentType(MediaType.APPLICATION_JSON)
                 .contentLength(jsonBytes.length)
                 .body(json);
+    }
+
+    // 新增下载接口
+    @Operation(summary = "下载固件文件")
+    @GetMapping("/download")
+    public ResponseEntity<Resource> downloadFirmware() throws IOException {
+        // 从数据库获取参数        
+        String otaUrl = SysParamsService.getValue("ota.url", false);
+        String otaFileName = SysParamsService.getValue("ota.filename", false);
+        log.info("OTA文件下载参数 - URL: {}, 文件名: {}", otaUrl, otaFileName);
+        
+        if (StringUtils.isAnyBlank(otaUrl, otaFileName)) {
+            log.warn("缺少必要参数 ota.url 或 ota.filename");
+            return ResponseEntity.status(400).body(null);
+        }
+
+        // 构造文件路径
+        URI uri = URI.create(otaUrl);
+        Path filePath = Paths.get("./",uri.getPath(), otaFileName).toAbsolutePath();        
+        log.debug("生成固件文件路径: {}", filePath);
+        
+        Resource resource = new UrlResource(filePath.toUri());
+        log.info("尝试加载固件资源: {}", resource.getFilename());
+
+        if (!resource.exists() || !resource.isReadable()) {
+            log.error("固件文件不存在或不可读: {}", filePath);
+            return ResponseEntity.status(404).body(null);
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header("Content-Disposition", "attachment; filename=\"" + otaFileName + "\"")
+                .body(resource);
     }
 }

@@ -9,6 +9,7 @@ import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +36,7 @@ import xiaozhi.modules.device.vo.UserShowDeviceListVO;
 import xiaozhi.modules.security.user.SecurityUser;
 import xiaozhi.modules.sys.service.SysParamsService;
 import xiaozhi.modules.sys.service.SysUserUtilService;
+import xiaozhi.modules.sys.service.SysParamsService;
 
 @Service
 public class DeviceServiceImpl extends BaseServiceImpl<DeviceDao, DeviceEntity> implements DeviceService {
@@ -47,14 +49,18 @@ public class DeviceServiceImpl extends BaseServiceImpl<DeviceDao, DeviceEntity> 
 
     private final RedisTemplate<String, Object> redisTemplate;
 
+    private final SysParamsService sysParamsService;
+
     // 添加构造函数来初始化 deviceMapper
     public DeviceServiceImpl(DeviceDao deviceDao, SysUserUtilService sysUserUtilService,
+            @Value("${app.fronted-url:http://localhost:8001}") String frontedUrl,
             SysParamsService sysParamsService,
             RedisTemplate<String, Object> redisTemplate) {
         this.deviceDao = deviceDao;
         this.sysUserUtilService = sysUserUtilService;
         this.frontedUrl = sysParamsService.getValue(Constant.SERVER_FRONTED_URL, true);
         this.redisTemplate = redisTemplate;
+        this.sysParamsService = sysParamsService;
     }
 
     @Override
@@ -127,9 +133,14 @@ public class DeviceServiceImpl extends BaseServiceImpl<DeviceDao, DeviceEntity> 
         // todo: 此处是固件信息，目前是针对固件上传上来的版本号再返回回去
         // 在未来开发了固件更新功能，需要更换此处代码，
         // 或写定时任务定期请求虾哥的OTA，获取最新的版本讯息保存到服务内
+        // deviceReport.getApplication().getVersion()
         DeviceReportRespDTO.Firmware firmware = new DeviceReportRespDTO.Firmware();
-        firmware.setVersion(deviceReport.getApplication().getVersion());
-        firmware.setUrl("http://localhost:8002/xiaozhi/ota/download");
+        
+        String otaUrl = sysParamsService.getValue("ota.url", false);
+        String otaVersion = sysParamsService.getValue("ota.version", false);        
+        // 解析json文件获取版本信息
+        firmware.setVersion(otaVersion);
+        firmware.setUrl(otaUrl);
         response.setFirmware(firmware);
 
         DeviceEntity deviceById = getDeviceById(macAddress);
