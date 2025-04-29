@@ -9,8 +9,6 @@ import uuid
 import opuslib_next
 from core.providers.asr.base import ASRProviderBase
 
-from funasr import AutoModel
-from funasr.utils.postprocess_utils import rich_transcription_postprocess
 import requests
 
 TAG = __name__
