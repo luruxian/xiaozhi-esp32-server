@@ -30,7 +30,7 @@ class ASRProvider(ASRProviderBase):
         file_path = None
         try:
             file_path = self.save_audio_to_file(opus_data, session_id)
-            
+            logger.bind(tag=TAG).info(f"stt文件: {file_path}")
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
             }
