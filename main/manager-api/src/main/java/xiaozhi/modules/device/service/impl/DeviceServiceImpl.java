@@ -9,8 +9,6 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -44,7 +42,6 @@ import xiaozhi.modules.device.vo.UserShowDeviceListVO;
 import xiaozhi.modules.security.user.SecurityUser;
 import xiaozhi.modules.sys.service.SysParamsService;
 import xiaozhi.modules.sys.service.SysUserUtilService;
-import xiaozhi.modules.sys.service.SysParamsService;
 
 @Slf4j
 @Service

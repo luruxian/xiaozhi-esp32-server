@@ -28,7 +28,6 @@ import xiaozhi.modules.device.dto.DeviceReportReqDTO;
 import xiaozhi.modules.device.dto.DeviceReportRespDTO;
 import xiaozhi.modules.device.entity.DeviceEntity;
 import xiaozhi.modules.device.service.DeviceService;
-import xiaozhi.modules.device.utils.NetworkUtil;
 import xiaozhi.modules.sys.service.SysParamsService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
