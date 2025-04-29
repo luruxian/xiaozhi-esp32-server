@@ -59,7 +59,7 @@ public class OTAController {
             clientId = deviceId;
         }
         String macAddress = deviceReportReqDTO.getMacAddress();
-        boolean macAddressValid = NetworkUtil.isMacAddressValid(macAddress);
+        boolean macAddressValid = isMacAddressValid(macAddress);
         // 设备Id和Mac地址应是一致的, 并且必须需要application字段
         if (!deviceId.equals(macAddress) || !macAddressValid || deviceReportReqDTO.getApplication() == null) {
             return createResponse(DeviceReportRespDTO.createError("Invalid OTA request"));
@@ -87,7 +87,11 @@ public class OTAController {
     public ResponseEntity<String> getOTA() {
         String wsUrl = sysParamsService.getValue(Constant.SERVER_WEBSOCKET, true);
         if (StringUtils.isBlank(wsUrl) || wsUrl.equals("null")) {
-            return ResponseEntity.ok("OTA接口不正常，缺少websocket地址");
+            return ResponseEntity.ok("OTA接口不正常，缺少websocket地址，请登录智控台，在参数管理找到【server.websocket】配置");
+        }
+        String otaUrl = sysParamsService.getValue(Constant.SERVER_OTA, true);
+        if (StringUtils.isBlank(otaUrl) || otaUrl.equals("null")) {
+            return ResponseEntity.ok("OTA接口不正常，缺少ota地址，请登录智控台，在参数管理找到【server.ota】配置");
         }
         return ResponseEntity.ok("OTA接口运行正常，websocket集群数量：" + wsUrl.split(";").length);
     }
@@ -105,15 +109,30 @@ public class OTAController {
                 .body(json);
     }
 
+    /**
+     * 简单判断mac地址是否有效（非严格）
+     *
+     * @param macAddress
+     * @return
+     */
+    private boolean isMacAddressValid(String macAddress) {
+        if (StringUtils.isBlank(macAddress)) {
+            return false;
+        }
+        // MAC地址通常为12位十六进制数字，可以包含冒号或连字符分隔符
+        String macPattern = "^([0-9A-Za-z]{2}[:-]){5}([0-9A-Za-z]{2})$";
+        return macAddress.matches(macPattern);
+    }
+
     // 新增下载接口
     @Operation(summary = "下载固件文件")
     @GetMapping("/download")
     public ResponseEntity<Resource> downloadFirmware() throws IOException {
-        // 从数据库获取参数        
+        // 从数据库获取参数
         String otaUrl = sysParamsService.getValue("ota.url", false);
         String otaFileName = sysParamsService.getValue("ota.filename", false);
         log.info("OTA文件下载参数 - URL: {}, 文件名: {}", otaUrl, otaFileName);
-        
+
         if (StringUtils.isAnyBlank(otaUrl, otaFileName)) {
             log.warn("缺少必要参数 ota.url 或 ota.filename");
             return ResponseEntity.status(400).body(null);
@@ -121,9 +140,9 @@ public class OTAController {
 
         // 构造文件路径
         URI uri = URI.create(otaUrl);
-        Path filePath = Paths.get("./",uri.getPath(), otaFileName).toAbsolutePath();        
+        Path filePath = Paths.get("./",uri.getPath(), otaFileName).toAbsolutePath();
         log.debug("生成固件文件路径: {}", filePath);
-        
+
         Resource resource = new UrlResource(filePath.toUri());
         log.info("尝试加载固件资源: {}", resource.getFilename());
 
