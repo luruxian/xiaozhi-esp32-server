@@ -63,7 +63,27 @@ pipeline {
                     
                     # 部署并启动
                     cd main/xiaozhi-server
-                    source ~/.bashrc  # 加载conda环境
+
+                    # 确保tmp目录存在并设置权限
+                    mkdir -p ./tmp
+                    chmod 775 ./tmp
+                    
+                    # 直接加载Conda初始化脚本
+                    CONDA_PATH="/home/ubuntu/miniconda3/bin/conda" 
+                    if [ -f "$CONDA_PATH/etc/profile.d/conda.sh" ]; then
+                        source "$CONDA_PATH/etc/profile.d/conda.sh"
+                    else
+                        echo "ERROR: 找不到Conda初始化脚本！"
+                        exit 1
+                    fi
+
+                    # 验证conda命令
+                    if ! command -v conda &> /dev/null; then
+                        echo "ERROR: Conda未正确配置！"
+                        echo "PATH: $PATH"
+                        exit 1
+                    fi
+
                     conda activate xiaozhi-esp32-server
                     nohup python -u app.py > ./tmp/server.log 2>&1 &
                     
