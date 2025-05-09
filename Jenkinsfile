@@ -62,7 +62,7 @@ pipeline {
                     fi
                     
                     # 部署并启动
-                    cd /home/ubuntu/projectbeta/xiaozhi-esp32-server/main/xiaozhi-server
+                    cd main/xiaozhi-server
                     conda activate xiaozhi-esp32-server
                     nohup python -u app.py > ./tmp/server.log 2>&1 &
                     
