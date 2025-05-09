@@ -65,10 +65,6 @@ pipeline {
 
                     cd main/xiaozhi-server
 
-                    # 确保tmp目录存在并设置权限
-                    mkdir -p ./tmp
-                    sudo chmod 775 ./tmp
-                    
                     source /home/ubuntu/anaconda3/etc/profile.d/conda.sh
                     conda activate xiaozhi-esp32-server
                     nohup python -u app.py > ./tmp/server.log 2>&1 &
