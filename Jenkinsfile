@@ -68,9 +68,18 @@ pipeline {
                     # 确保tmp目录存在并设置权限
                     mkdir -p ./tmp
                     sudo chmod 775 ./tmp
-                    source ~/.bashrc
-                    conda activate xiaozhi-esp32-server
-                    nohup python -u app.py > ./tmp/server.log 2>&1 &
+
+                    PYTHON_PATH="/home/ubuntu/anaconda3/envs/xiaozhi-esp32-server/bin/python"
+
+
+                    # 验证Python路径是否存在
+                    if [ ! -f "$PYTHON_PATH" ]; then
+                        echo "ERROR: Python解释器不存在！路径: $PYTHON_PATH"
+                        exit 1
+                    fi
+
+
+                    nohup "$PYTHON_PATH" -u app.py > ./tmp/server.log 2>&1 &
                     
                     # 验证服务是否启动成功
                     sleep 5
