@@ -62,12 +62,13 @@ pipeline {
                     fi
                     
                     # 部署并启动
+
                     cd main/xiaozhi-server
 
                     # 确保tmp目录存在并设置权限
                     mkdir -p ./tmp
                     sudo chmod 775 ./tmp
-
+                    source ~/.bashrc
                     conda activate xiaozhi-esp32-server
                     nohup python -u app.py > ./tmp/server.log 2>&1 &
                     
