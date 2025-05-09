@@ -63,6 +63,7 @@ pipeline {
                     
                     # 部署并启动
                     cd main/xiaozhi-server
+                    source ~/.bashrc  # 加载conda环境
                     conda activate xiaozhi-esp32-server
                     nohup python -u app.py > ./tmp/server.log 2>&1 &
                     
