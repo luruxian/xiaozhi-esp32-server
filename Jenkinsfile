@@ -69,7 +69,7 @@ pipeline {
                     chmod 775 ./tmp
                     
                     # 直接加载Conda初始化脚本
-                    CONDA_PATH="/home/ubuntu/miniconda3/bin/conda" 
+                    CONDA_PATH="/home/ubuntu/anaconda3" 
                     if [ -f "$CONDA_PATH/etc/profile.d/conda.sh" ]; then
                         source "$CONDA_PATH/etc/profile.d/conda.sh"
                     else
