@@ -53,7 +53,7 @@ pipeline {
         stage('部署xiaozhi-server') {
             steps {
                 echo '部署xiaozhi-server服务 (端口8000)'
-                sh '''
+                sh '''#!/bin/bash
                     # 检查端口是否被占用（假设xiaozhi-server使用8000端口）
                     if lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null ; then
                         echo "停止现有xiaozhi-server服务..."
