@@ -29,12 +29,6 @@ import xiaozhi.modules.device.dto.DeviceReportRespDTO;
 import xiaozhi.modules.device.entity.DeviceEntity;
 import xiaozhi.modules.device.service.DeviceService;
 import xiaozhi.modules.sys.service.SysParamsService;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.io.IOException;
-import java.net.URI;
 
 @Tag(name = "设备管理", description = "OTA 相关接口")
 @Slf4j
@@ -110,7 +104,7 @@ public class OTAController {
 
     /**
      * 简单判断mac地址是否有效（非严格）
-     *
+     * 
      * @param macAddress
      * @return
      */
@@ -121,38 +115,5 @@ public class OTAController {
         // MAC地址通常为12位十六进制数字，可以包含冒号或连字符分隔符
         String macPattern = "^([0-9A-Za-z]{2}[:-]){5}([0-9A-Za-z]{2})$";
         return macAddress.matches(macPattern);
-    }
-
-    // 新增下载接口
-    @Operation(summary = "下载固件文件")
-    @GetMapping("/download")
-    public ResponseEntity<Resource> downloadFirmware() throws IOException {
-        // 从数据库获取参数
-        String otaUrl = sysParamsService.getValue("ota.url", false);
-        String otaFileName = sysParamsService.getValue("ota.filename", false);
-        log.info("OTA文件下载参数 - URL: {}, 文件名: {}", otaUrl, otaFileName);
-
-        if (StringUtils.isAnyBlank(otaUrl, otaFileName)) {
-            log.warn("缺少必要参数 ota.url 或 ota.filename");
-            return ResponseEntity.status(400).body(null);
-        }
-
-        // 构造文件路径
-        URI uri = URI.create(otaUrl);
-        Path filePath = Paths.get("./",uri.getPath(), otaFileName).toAbsolutePath();
-        log.debug("生成固件文件路径: {}", filePath);
-
-        Resource resource = new UrlResource(filePath.toUri());
-        log.info("尝试加载固件资源: {}", resource.getFilename());
-
-        if (!resource.exists() || !resource.isReadable()) {
-            log.error("固件文件不存在或不可读: {}", filePath);
-            return ResponseEntity.status(404).body(null);
-        }
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .header("Content-Disposition", "attachment; filename=\"" + otaFileName + "\"")
-                .body(resource);
     }
 }
