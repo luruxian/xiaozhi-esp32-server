@@ -13,8 +13,8 @@ spring:
       #MySQL
       driver-class-name: com.mysql.cj.jdbc.Driver
       url: jdbc:mysql://127.0.0.1:3306/xiaozhi_esp32_server?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true
-      username: root
-      password: 123456
+      username: admin
+      password: Beta@123456
       initial-size: 10
       max-active: 100
       min-idle: 10
@@ -49,5 +49,3 @@ spring:
           max-idle: 8        # 连接池中的最大空闲连接
           min-idle: 0        # 连接池中的最小空闲连接
         shutdown-timeout: 100ms  # 客户端优雅关闭的等待时间
-app:
-  fronted-url: http://47.98.194.102:8001        
