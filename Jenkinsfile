@@ -1,25 +1,25 @@
 pipeline {
     agent any
-    
+
     stages {
-        stage('部署manager-api') {
+        stage('部署xiaozhi-api') {
             steps {
-                echo '部署manager-api服务 (端口8002)'
-                sh '''
-                    # 停止旧服务
-                    if sudo systemctl is-active --quiet xiaozhi-api; then
-                        echo "停止现有 xiaozhi-api 服务..."
+                echo '部署xiaozhi-api服务'
+                sh '''#!/bin/bash
+                    # 检查 xiaozhi-api 服务状态并停止
+                    if systemctl is-active --quiet xiaozhi-api; then
+                        echo "检测到 xiaozhi-api 正在运行，尝试停止..."
                         sudo systemctl stop xiaozhi-api
+                        sleep 10 # 等待服务停止
                     fi
 
-                    # 构建项目
+                    # 构建并部署 xiaozhi-api
                     cd main/manager-api
-                    mvn clean install -DskipTests
-
-                    # 启动服务
+                    mvn clean install
+                    cd target
                     sudo systemctl start xiaozhi-api
 
-                    # 等待服务变为 active，最多尝试10次，每次间隔3秒
+                    # 确认 xiaozhi-api 服务已启动
                     for i in {1..20}; do
                         if sudo systemctl is-active --quiet xiaozhi-api; then
                             echo "xiaozhi-api 启动成功！"
@@ -30,9 +30,8 @@ pipeline {
                         fi
                     done
 
-                    # 最终验证状态
                     if ! sudo systemctl is-active --quiet xiaozhi-api; then
-                        echo "ERROR: manager-api 启动失败！"
+                        echo "ERROR: xiaozhi-api 启动失败！"
                         exit 1
                     fi
                 '''
@@ -41,29 +40,31 @@ pipeline {
 
         stage('部署manager-web') {
             steps {
-                echo '部署manager-web服务 (端口8001)'
-                sh '''
-                    # 停止旧服务
-                    if sudo systemctl is-active --quiet xiaozhi-web; then
-                        echo "停止现有 xiaozhi-web 服务..."
+                echo '部署manager-web服务'
+                sh '''#!/bin/bash
+                    # 检查 xiaozhi-web 服务状态并停止
+                    if systemctl is-active --quiet xiaozhi-web; then
+                        echo "检测到 xiaozhi-web 正在运行，尝试停止..."
                         sudo systemctl stop xiaozhi-web
+                        sleep 5 # 等待服务停止
                     fi
 
-                    # 启动服务
+                    # 构建并部署 manager-web
+                    cd main/manager-web
+                    npm install
                     sudo systemctl start xiaozhi-web
 
-                    # 等待服务变为 active，最多尝试10次，每次间隔3秒
+                    # 确认 manager-web 服务已启动
                     for i in {1..20}; do
                         if sudo systemctl is-active --quiet xiaozhi-web; then
-                            echo "xiaozhi-web 启动成功！"
+                            echo "manager-web 启动成功！"
                             break
                         else
-                            echo "等待 xiaozhi-web 启动中...（$i）"
+                            echo "等待 manager-web 启动中...（$i）"
                             sleep 5
                         fi
                     done
 
-                    # 最终验证状态
                     if ! sudo systemctl is-active --quiet xiaozhi-web; then
                         echo "ERROR: manager-web 启动失败！"
                         exit 1
@@ -74,24 +75,23 @@ pipeline {
 
         stage('部署xiaozhi-server') {
             steps {
-                echo '部署xiaozhi-server服务 (端口8000)'
+                echo '部署xiaozhi-server服务'
                 sh '''#!/bin/bash
-                    # 检查并释放端口8000
-                    if lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null ; then
-                        echo "停止现有 xiaozhi-server 服务..."
-                        pkill -f "python -u app.py" || true
-                        sleep 5
+                    # 检查 xiaozhi-server 服务状态并停止
+                    if systemctl is-active --quiet xiaozhi-server; then
+                        echo "检测到 xiaozhi-server 正在运行，尝试停止..."
+                        sudo systemctl stop xiaozhi-server
+                        sleep 10 # 等待服务停止
                     fi
 
-                    # 启动服务
+                    # 启动 xiaozhi-server 服务
                     cd main/xiaozhi-server
-                    source /home/ubuntu/anaconda3/etc/profile.d/conda.sh
-                    conda activate xiaozhi-esp32-server
-                    nohup python -u app.py > ./tmp/server.log 2>&1 &
+                    sudo systemctl start xiaozhi-server
+                    sleep 20
 
-                    # 等待端口监听，最多尝试10次
+                    # 确认 xiaozhi-server 服务已启动
                     for i in {1..20}; do
-                        if lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null ; then
+                        if sudo systemctl is-active --quiet xiaozhi-server; then
                             echo "xiaozhi-server 启动成功！"
                             break
                         else
@@ -100,8 +100,7 @@ pipeline {
                         fi
                     done
 
-                    # 最终验证
-                    if ! lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null ; then
+                    if ! sudo systemctl is-active --quiet xiaozhi-server; then
                         echo "ERROR: xiaozhi-server 启动失败！"
                         exit 1
                     fi
