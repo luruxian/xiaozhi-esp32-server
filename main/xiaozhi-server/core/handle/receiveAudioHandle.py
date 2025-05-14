@@ -98,9 +98,15 @@ async def no_voice_close_connect(conn):
             conn.close_after_chat = True
             conn.client_abort = False
             conn.asr_server_receive = False
-            prompt = (
-                "Please start with 'How time flies' and end this conversation with affectionate and reluctant words."
-            )
+            end_prompt = conn.config.get("end_prompt", {})
+            if end_prompt and end_prompt.get("enable", True) is False:
+                conn.logger.bind(tag=TAG).info("结束对话，无需发送结束提示语")
+                await conn.close()
+                return
+            prompt = end_prompt.get("prompt")
+            if not prompt:
+                prompt = "Please start with 'How time flies' and end this conversation with affectionate and reluctant words."
+
             await startToChat(conn, prompt)
 
 
