@@ -231,7 +231,9 @@ class ConnectionHandler:
                         # 创建新事件循环（避免与主循环冲突）
                         loop = asyncio.new_event_loop()
                         asyncio.set_event_loop(loop)
-                        loop.run_until_complete(self.memory.save_memory(self.dialogue.dialogue))
+                        loop.run_until_complete(
+                            self.memory.save_memory(self.dialogue.dialogue)
+                        )
                     except Exception as e:
                         self.logger.bind(tag=TAG).error(f"保存记忆失败: {e}")
                     finally:
@@ -405,6 +407,8 @@ class ConnectionHandler:
             ]["Intent"]
         if private_config.get("prompt", None) is not None:
             self.config["prompt"] = private_config["prompt"]
+        if private_config.get("summaryMemory", None) is not None:
+            self.config["summaryMemory"] = private_config["summaryMemory"]
         if private_config.get("device_max_output_size", None) is not None:
             self.max_output_size = int(private_config["device_max_output_size"])
         if private_config.get("chat_history_conf", None) is not None:
@@ -438,7 +442,12 @@ class ConnectionHandler:
 
     def _initialize_memory(self):
         """初始化记忆模块"""
-        self.memory.init_memory(self.device_id, self.llm)
+        self.memory.init_memory(
+            role_id=self.device_id,
+            llm=self.llm,
+            summary_memory=self.config.get("summaryMemory", None),
+            save_to_file=not self.read_config_from_api,
+        )
 
     def _initialize_intent(self):
         self.intent_type = self.config["Intent"][
