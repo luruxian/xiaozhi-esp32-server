@@ -177,10 +177,16 @@ class TTSProvider(TTSProviderBase):
         )
 
         if response.status_code == 200:
-            audio_content = response.content
-
             with open(output_file, "wb") as audio_file:
-                audio_file.write(audio_content)
+                for chunk in response.iter_content(chunk_size=1024):
+                    if chunk:
+                        audio_file.write(chunk)
+                        audio_file.flush()  # 实时写入磁盘
+            #流式改造
+            #audio_content = response.content
+
+            #with open(output_file, "wb") as audio_file:
+            #    audio_file.write(audio_content)
 
         else:
             error_msg = f"Request failed with status code {response.status_code}"
