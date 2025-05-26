@@ -170,6 +170,7 @@ class TTSProvider(TTSProviderBase):
             data=ormsgpack.packb(
                 pydantic_data, option=ormsgpack.OPT_SERIALIZE_PYDANTIC
             ),
+            stream=True,
             headers={
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/msgpack",
