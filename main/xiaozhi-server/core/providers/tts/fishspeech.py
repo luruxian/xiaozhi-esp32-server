@@ -3,7 +3,7 @@ import os
 import uuid
 import requests
 import ormsgpack
-# import wave
+import wave
 from pathlib import Path
 from pydantic import BaseModel, Field, conint, model_validator
 from typing_extensions import Annotated
