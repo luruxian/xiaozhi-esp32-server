@@ -47,10 +47,13 @@ class TTSProvider(TTSProviderBase):
             "response_format": "wav",
             "speed": self.speed,
         }
-        response = requests.post(self.api_url, json=data, headers=headers)
+        response = requests.post(self.api_url, json=data, headers=headers, stream=True)
         if response.status_code == 200:
             with open(output_file, "wb") as audio_file:
-                audio_file.write(response.content)
+                for chunk in response.iter_content(chunk_size=4096):
+                    if chunk:
+                        audio_file.write(chunk)
+                        audio_file.flush()  # 实时写入磁盘
         else:
             raise Exception(
                 f"OpenAI TTS请求失败: {response.status_code} - {response.text}"

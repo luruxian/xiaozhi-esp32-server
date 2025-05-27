@@ -3,6 +3,7 @@ import os
 import uuid
 import requests
 import ormsgpack
+import wave
 from pathlib import Path
 from pydantic import BaseModel, Field, conint, model_validator
 from typing_extensions import Annotated
@@ -170,24 +171,37 @@ class TTSProvider(TTSProviderBase):
             data=ormsgpack.packb(
                 pydantic_data, option=ormsgpack.OPT_SERIALIZE_PYDANTIC
             ),
+            stream=self.streaming,
             headers={
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/msgpack",
             },
         )
-
+        print(f"*********    self.streaming    ******  '{self.streaming}'.")
         if response.status_code == 200:
-            with open(output_file, "wb") as audio_file:
-                for chunk in response.iter_content(chunk_size=1024):
-                    if chunk:
-                        audio_file.write(chunk)
-                        audio_file.flush()  # 实时写入磁盘
-            #流式改造
-            #audio_content = response.content
+            if self.streaming:
+                #以下为流式
+                wf = wave.open(output_file, "wb")
+                wf.setnchannels(self.channels)
+                wf.setsampwidth(2)  # 16-bit PCM
+                wf.setframerate(self.rate)
 
-            #with open(output_file, "wb") as audio_file:
-            #    audio_file.write(audio_content)
+                try:
+                    for chunk in response.iter_content(chunk_size=1024):
+                        if chunk:
+                            wf.writeframesraw(chunk)
+                finally:
+                    wf.close()
+                    
+                print(f"Streamed audio has been saved to '{output_file}'.")
+            else:
+                #以下为非流式
+                audio_content = response.content
 
+                with open(output_file, "wb") as audio_file:
+                    audio_file.write(audio_content)
+                
+                print(f"audio has been saved to '{output_file}'.")
         else:
             error_msg = f"Request failed with status code {response.status_code}"
             print(error_msg)
