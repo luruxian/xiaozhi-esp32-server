@@ -75,7 +75,6 @@ async def no_voice_close_connect(conn, have_voice):
                 prompt = "Please start with 'How time flies' and end this conversation with affectionate and reluctant words."
             await startToChat(conn, prompt)
 
-
 async def max_out_size(conn):
     text = "不好意思，我现在有点事情要忙，明天这个时候我们再聊，约好了哦！明天不见不散，拜拜！"
     await send_stt_message(conn, text)
