@@ -86,6 +86,7 @@ pipeline {
 
                     # 启动 xiaozhi-server 服务
                     cd main/xiaozhi-server
+                    pip install -r requirements.txt
                     sudo systemctl start xiaozhi-server
                     sleep 20
 
