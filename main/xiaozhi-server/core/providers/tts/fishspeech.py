@@ -193,7 +193,6 @@ class TTSProvider(TTSProviderBase):
                     audio_file.write(audio_content)
                 
                 print(f"audio has been saved to '{output_file}'.")
-
         else:
             error_msg = f"Request failed with status code {response.status_code}"
             print(error_msg)
