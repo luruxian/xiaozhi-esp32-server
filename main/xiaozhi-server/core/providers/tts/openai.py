@@ -17,7 +17,8 @@ class TTSProvider(TTSProviderBase):
             self.voice = config.get("private_voice")
         else:
             self.voice = config.get("voice", "alloy")
-        self.response_format = "wav"
+        self.response_format = config.get("format", "wav")
+        self.audio_file_type = config.get("format", "wav")
 
         # 处理空字符串的情况
         speed = config.get("speed", "1.0")
