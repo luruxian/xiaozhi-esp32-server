@@ -131,6 +131,7 @@ class TTSProvider(TTSProviderBase):
         self.use_memory_cache = config.get("use_memory_cache", "on")
         self.seed = int(config.get("seed")) if config.get("seed") else None
         self.api_url = config.get("api_url", "http://127.0.0.1:8080/v1/tts")
+        self.model = config.get("model", "s1")
 
     async def text_to_speak(self, text, output_file):
         # Prepare reference data
@@ -157,7 +158,7 @@ class TTSProvider(TTSProviderBase):
         }
 
         pydantic_data = ServeTTSRequest(**data)
-
+        logger.bind(tag=TAG).info(f"[fishspeech model] = {self.model}")
         response = requests.post(
             self.api_url,
             data=ormsgpack.packb(
@@ -167,35 +168,51 @@ class TTSProvider(TTSProviderBase):
             headers={
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/msgpack",
+                "model":self.model
             },
         )
-        print(f"*********    self.streaming    ******  '{self.streaming}'.")
+
         if response.status_code == 200:
-            if self.streaming:
-                #以下为流式
-                wf = wave.open(output_file, "wb")
-                wf.setnchannels(self.channels)
-                wf.setsampwidth(2)  # 16-bit PCM
-                wf.setframerate(self.rate)
+            audio_content = response.content
 
-                try:
-                    for chunk in response.iter_content(chunk_size=1024):
-                        if chunk:
-                            wf.writeframesraw(chunk)
-                finally:
-                    wf.close()
-                    
-                print(f"Streamed audio has been saved to '{output_file}'.")
-            else:
-                #以下为非流式
-                audio_content = response.content
-
+            if output_file:
                 with open(output_file, "wb") as audio_file:
                     audio_file.write(audio_content)
-                
-                print(f"audio has been saved to '{output_file}'.")
+            else:
+                return audio_content
+
         else:
             error_msg = f"Request failed with status code {response.status_code}"
             print(error_msg)
             print(response.json())
             raise Exception(error_msg)
+        # print(f"*********    self.streaming    ******  '{self.streaming}'.")
+        # if response.status_code == 200:
+        #     if self.streaming:
+        #         #以下为流式
+        #         wf = wave.open(output_file, "wb")
+        #         wf.setnchannels(self.channels)
+        #         wf.setsampwidth(2)  # 16-bit PCM
+        #         wf.setframerate(self.rate)
+
+        #         try:
+        #             for chunk in response.iter_content(chunk_size=1024):
+        #                 if chunk:
+        #                     wf.writeframesraw(chunk)
+        #         finally:
+        #             wf.close()
+                    
+        #         print(f"Streamed audio has been saved to '{output_file}'.")
+        #     else:
+        #         #以下为非流式
+        #         audio_content = response.content
+
+        #         with open(output_file, "wb") as audio_file:
+        #             audio_file.write(audio_content)
+                
+        #         print(f"audio has been saved to '{output_file}'.")
+        # else:
+        #     error_msg = f"Request failed with status code {response.status_code}"
+        #     print(error_msg)
+        #     print(response.json())
+        #     raise Exception(error_msg)
